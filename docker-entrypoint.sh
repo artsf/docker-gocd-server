@@ -84,7 +84,8 @@ if [ "$1" = '/go-server/server.sh' ]; then
       fi
     done
 
-    try exec /sbin/tini -- su-exec go "$0" "$@"
+    #try exec /sbin/tini -- su-exec go "$0" "$@"
+    try exec sudo -u go "$0" "$@"
   fi
 fi
 

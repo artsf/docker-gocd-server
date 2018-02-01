@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM alpine:3.7
+FROM centos:7.4.1708
 
 MAINTAINER GoCD <go-cd-dev@googlegroups.com>
 
@@ -34,17 +34,24 @@ ARG GID=1000
 RUN \
 # add our user and group first to make sure their IDs get assigned consistently,
 # regardless of whatever dependencies get added
-  addgroup -g ${GID} go && \
-  adduser -D -u ${UID} -s /bin/bash -G go go && \
+  groupadd -g ${GID} go && \
+  adduser -u ${UID} -s /bin/bash -g go go && \
 # install dependencies and other helpful CLI tools
-  apk --no-cache upgrade && \
-  apk add --no-cache openjdk8-jre-base git mercurial subversion tini openssh-client bash su-exec curl && \
+  yum -y upgrade && \
+  yum -y install java-1.8.0-openjdk git subversion nano openssh-clients bash sudo curl unzip && \
+  curl -o /sbin/tini https://github.com/krallin/tini/releases/download/v0.16.1/tini-static-amd64 && \
+  chmod +x /sbin/tini && \
+  java -version && \
+  git --version
+
+RUN \
 # download the zip file
   curl --fail --location --silent --show-error "https://download.gocd.org/binaries/18.1.0-5937/generic/go-server-18.1.0-5937.zip" > /tmp/go-server.zip && \
 # unzip the zip file into /go-server, after stripping the first path prefix
   unzip /tmp/go-server.zip -d / && \
   rm /tmp/go-server.zip && \
   mv go-server-18.1.0 /go-server && \
+  chown -R go:go /go-server && \
   mkdir -p /docker-entrypoint.d
 
 COPY logback-include.xml /go-server/config/logback-include.xml
